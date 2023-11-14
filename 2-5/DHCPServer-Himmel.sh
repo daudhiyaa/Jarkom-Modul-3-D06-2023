@@ -6,7 +6,6 @@ apt install isc-dhcp-server -y
 nano /etc/default/isc-dhcp-server
 # INTERFACES="eth0"
 
-# config dhcp-server di /etc/dhcp/dhcpd.conf
 echo '
 subnet 192.194.1.0 netmask 255.255.255.0 {
 }
@@ -32,8 +31,9 @@ subnet 192.194.4.0 netmask 255.255.255.0 {
     option domain-name-servers 192.194.1.2; # IP DNS Server
     default-lease-time 720;
     max-lease-time 5760;
-}' >>/etc/dhcp/dhcpd.conf
+}' >/etc/dhcp/dhcpd.conf
 
 service isc-dhcp-server restart
 printf '\n'
 service isc-dhcp-server status
+printf '\n'
