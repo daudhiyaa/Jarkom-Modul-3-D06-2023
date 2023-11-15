@@ -1,10 +1,10 @@
+apt-get update
+apt-get install dnsutils -y
+
 echo '
 # nameserver 192.168.122.1
 nameserver 192.194.1.2 ; IP DNS Server
 ' >/etc/resolv.conf
-
-apt-get update
-apt-get install dnsutils -y
 
 printf '\n'
 host -t A riegel.canyon.D06.com

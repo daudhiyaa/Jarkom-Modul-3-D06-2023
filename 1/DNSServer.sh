@@ -1,5 +1,6 @@
-apt update
-apt install bind9 -y
+apt-get update
+apt-get install bind9 -y
+
 echo '
 zone "canyon.D06.com" {
     type master;
@@ -74,7 +75,7 @@ echo 'options {
         directory "/var/cache/bind";
 
         forwarders {
-          192.168.122.1;
+            192.168.122.1;
         };
 
         // dnssec-validation auto;
