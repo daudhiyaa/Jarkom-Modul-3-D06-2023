@@ -8,7 +8,7 @@ echo '
 
 auto eth0
 iface eth0 inet dhcp
-  hwaddress ether 2e:d1:1b:07:c0:d7
+hwaddress ether 2e:d1:1b:07:c0:d7
 	up echo nameserver 192.168.122.1 > /etc/resolv.conf
 ' >/etc/network/interfaces
 
