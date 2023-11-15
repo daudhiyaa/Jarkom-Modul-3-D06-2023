@@ -1,10 +1,11 @@
 # CONFIGURE DULU TIAP DHCP CLIENT dari static ke dhcp
 
-apt update
-apt install isc-dhcp-server -y
+apt-get update
+apt-get install isc-dhcp-server -y
 
-nano /etc/default/isc-dhcp-server
-# INTERFACES="eth0"
+echo '
+INTERFACESv4="eth0"
+' >/etc/default/isc-dhcp-server
 
 echo '
 subnet 192.194.1.0 netmask 255.255.255.0 {
@@ -35,5 +36,6 @@ subnet 192.194.4.0 netmask 255.255.255.0 {
 
 service isc-dhcp-server restart
 printf '\n'
+# rm /var/run/dhcpd.pid
 service isc-dhcp-server status
 printf '\n'
