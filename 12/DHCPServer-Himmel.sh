@@ -39,19 +39,20 @@ host Lugner {
 }
 
 host Richter {
-    hardware ethernet ...;
+    hardware ethernet 6a:1d:a5:09:89:94;
     fixed-address 192.194.3.69;
 }
 host Revolte {
-    hardware ethernet ...;
+    hardware ethernet 92:2d:40:42:e6:2f;
     fixed-address 192.194.3.70;
 }
 host Stark {
-    hardware ethernet ...;
+    hardware ethernet 82:92:c9:1e:3d:2f;
     fixed-address 192.194.4.167;
 }
 host Sein {
-    hardware ethernet ...;
+    hardware ethernet b2:18:be:a8:d0:d9;
     fixed-address 192.194.4.168;
 }
 ' >/etc/dhcp/dhcpd.conf
+service isc-dhcp-server restart
