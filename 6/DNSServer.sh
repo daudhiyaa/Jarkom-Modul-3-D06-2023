@@ -17,3 +17,5 @@ $TTL    604800
 www             IN      CNAME   channel.D06.com.
 granz           IN      A       192.194.2.2 ; IP Load Balancer
 ' >/etc/bind/jarkom/channel.D06.com
+
+service bind9 restart

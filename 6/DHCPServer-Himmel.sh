@@ -38,3 +38,4 @@ host Lugner {
     fixed-address 192.194.3.1;
 }
 ' >/etc/dhcp/dhcpd.conf
+service isc-dhcp-server restart
