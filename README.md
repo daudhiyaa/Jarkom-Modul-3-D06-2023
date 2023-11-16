@@ -28,3 +28,13 @@
 ![Alt text](images/image-3.png)
 
 ![Alt text](images/image-4.png)
+
+## No 13
+
+**Result di Database** :
+
+![Alt text](images/image-5.png)
+
+**Result di Worker** :
+
+![Alt text](images/image-6.png)
