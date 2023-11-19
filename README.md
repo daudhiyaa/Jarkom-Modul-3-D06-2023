@@ -641,17 +641,84 @@ Untuk menyelesaikan soal no 6, kita perlu men-setup beberapa node dengan urutan 
     apt-get update
     apt-get install lynx -y
 
-    lynx 192.194.2.2
     lynx granz.channel.D06.com
    ```
 
 ## No 7
 
-## No 8
+Testing menggunakan `apache benchmark` dengan 1000 request dan 100 request/second
 
-## No 9
+- DHCP Client (Bebas yang mana)
+
+  ```sh
+  apt-get update
+  apt-get install lynx htop apache2-utils -y
+
+  ab -n 1000 -c 100 http://granz.channel.D06.com/
+  ```
+
+- All PHP Worker
+
+  Cek banyak request yang masuk terhadap masing-masing worker. Jika `jumlah request = 1000/3`, maka Load Balancer sudah melakukan tugasnya dengan benar
+
+  ```sh
+  cat /var/log/nginx/jarkom_access.log | grep "GET" | wc -l
+  ```
+
+## No 8 & 9
+
+Untuk nomor 8 & 9, bisa cek README berikut :
+
+- [README no 8](https://github.com/daudhiyaa/Jarkom-Modul-3-D06-2023/blob/main/8/README.md)
+
+- [README no 9](https://github.com/daudhiyaa/Jarkom-Modul-3-D06-2023/blob/main/9/README.md)
 
 ## No 10
+
+Pertama-tama, setup Load Balancer untuk menambahkan credential
+
+```sh
+apt-get update
+apt-get install apache2-utils -y
+mkdir -p /etc/nginx/rahasisakita
+htpasswd -cb /etc/nginx/rahasisakita/.htpasswd netics ajkD06
+
+echo '
+upstream myweb  {
+  server 192.194.3.1;
+  server 192.194.3.2;
+  server 192.194.3.3;
+}
+
+server {
+  listen 80;
+  server_name granz.channel.D06.com;
+
+  location / {
+    proxy_pass http://myweb;
+
+    auth_basic '\"Administrator\'s Area\"';
+    auth_basic_user_file /etc/nginx/rahasisakita/.htpasswd;
+  }
+
+  location ~ /\.ht {
+    deny all;
+  }
+
+  error_log /var/log/nginx/lb_error.log;
+  access_log /var/log/nginx/lb_access.log;
+}
+' >/etc/nginx/sites-available/lb-jarkom
+
+service nginx reload
+service nginx restart
+```
+
+Lalu, lakukan testing di client
+
+```sh
+ab -A netics:ajkD06 -n 100 -c 100 http://granz.channel.D06.com/
+```
 
 **Result** :
 
@@ -664,6 +731,51 @@ Untuk menyelesaikan soal no 6, kita perlu men-setup beberapa node dengan urutan 
 ![Alt text](images/image-1.png)
 
 ## No 11
+
+Setup Load Balancer agar setiap request yang mengandung `/its` akan di proxy passing menuju halaman `https://www.its.ac.id`
+
+```sh
+# Di Load Balancer
+echo '
+upstream myweb  {
+  server 192.194.3.1;
+  server 192.194.3.2;
+  server 192.194.3.3;
+}
+
+server {
+  listen 80;
+  server_name granz.channel.D06.com;
+
+  location / {
+    proxy_pass http://myweb;
+
+    auth_basic '\"Administrator\'s Area\"';
+    auth_basic_user_file /etc/nginx/rahasisakita/.htpasswd;
+  }
+
+  location ~* /its {
+    proxy_pass https://www.its.ac.id;
+  }
+
+  location ~ /\.ht {
+    deny all;
+  }
+
+  error_log /var/log/nginx/lb_error.log;
+  access_log /var/log/nginx/lb_access.log;
+}
+' >/etc/nginx/sites-available/lb-jarkom
+
+service nginx reload
+service nginx restart
+```
+
+Testing di Client
+
+```sh
+lynx granz.channel.D06.com/its
+```
 
 **Result** :
 
@@ -682,7 +794,3 @@ Untuk menyelesaikan soal no 6, kita perlu men-setup beberapa node dengan urutan 
 **Result di Worker** :
 
 ![Alt text](images/image-6.png)
-
-```
-
-```
