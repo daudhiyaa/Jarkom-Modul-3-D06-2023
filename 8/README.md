@@ -4,7 +4,7 @@ Di Client
 mkdir -p /Jarkom-Modul-3-D06-2023/testingdata
 ```
 
-## 1. Load Balancer
+## 1. Round Robin
 
 Di LB
 
@@ -31,7 +31,7 @@ Result
 
 ![Alt text](images/image-1.png)
 
-## 2. Weighted Load Balancer
+## 2. Weighted Round Robin
 
 Di LB
 
