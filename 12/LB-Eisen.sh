@@ -27,7 +27,6 @@ server {
     allow all;
   }
 
-  
   location ~ /\.ht {
     deny all;
   }

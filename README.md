@@ -785,7 +785,312 @@ lynx granz.channel.D06.com/its
 
 ![Alt text](images/image-4.png)
 
+## No 12
+
+Untuk menyelesaikan soal no 12, kita perlu men-setup beberapa node dengan urutan berikut :
+
+1. All DHCP Client Worker (Ganti dengan `ether` masing2)
+
+   Fixed kan addressnya
+
+   ```sh
+   echo '
+   auto eth0
+   iface eth0 inet dhcp
+   hwaddress ether ...
+     up echo nameserver 192.168.122.1 > /etc/resolv.conf
+   ' >/etc/network/interfaces
+   ```
+
+2. Load Balancer - Sein
+
+   Setup Load Balancer agar hanya IP tertentu yang diperbolehkan untuk mengakses domain
+
+   ```sh
+   echo '
+   upstream myweb  {
+     server 192.194.3.1;
+     server 192.194.3.2;
+     server 192.194.3.3;
+   }
+
+   server {
+     listen 80;
+     server_name granz.channel.D06.com;
+
+     location / {
+       proxy_pass http://myweb;
+
+       auth_basic '\"Administrator\'s Area\"';
+       auth_basic_user_file /etc/nginx/rahasisakita/.htpasswd;
+
+       allow 192.194.3.69;
+       allow 192.194.3.70;
+       allow 192.194.4.167;
+       allow 192.194.4.168;
+       deny all;
+     }
+
+     location ~* /its {
+       proxy_pass https://www.its.ac.id;
+       allow all;
+     }
+
+     location ~ /\.ht {
+       deny all;
+     }
+
+     error_log /var/log/nginx/lb_error.log;
+     access_log /var/log/nginx/lb_access.log;
+   }
+   ' >/etc/nginx/sites-available/lb-jarkom
+
+   service nginx reload
+   service nginx restart
+   ```
+
+3. DHCP Server - Himmel
+
+   Berikan konfigurasi untuk masing DHCP Client
+
+   ```sh
+   echo '
+   ...
+   host Richter {
+       hardware ethernet 6a:1d:a5:09:89:94;
+       fixed-address 192.194.3.69;
+   }
+   host Revolte {
+       hardware ethernet 92:2d:40:42:e6:2f;
+       fixed-address 192.194.3.70;
+   }
+   host Stark {
+       hardware ethernet 82:92:c9:1e:3d:2f;
+       fixed-address 192.194.4.167;
+   }
+   host Sein {
+       hardware ethernet b2:18:be:a8:d0:d9;
+       fixed-address 192.194.4.168;
+   }
+   ' >/etc/dhcp/dhcpd.conf
+   service isc-dhcp-server restart
+   ```
+
+4. All PHP Worker
+
+   Restart nginx pada setiap PHP Worker
+
+   ```sh
+   service nginx restart
+   ```
+
 ## No 13
+
+Setup DATABASE - DENKEN
+
+```sh
+apt-get update
+apt-get install mariadb-server -y
+service mysql start
+
+echo '
+# The MariaDB configuration file
+#
+# The MariaDB/MySQL tools read configuration files in the following order:
+# 1. "/etc/mysql/mariadb.cnf" (this file) to set global defaults,
+# 2. "/etc/mysql/conf.d/*.cnf" to set global options.
+# 3. "/etc/mysql/mariadb.conf.d/*.cnf" to set MariaDB-only options.
+# 4. "~/.my.cnf" to set user-specific options.
+#
+# If the same option is defined multiple times, the last one will apply.
+#
+# One can use all long options that the program supports.
+# Run program with --help to get a list of available options and with
+# --print-defaults to see which it would actually understand and use.
+
+#
+# This group is read both both by the client and the server
+# use it for options that affect everything
+#
+[client-server]
+
+# Import all .cnf files from configuration directory
+!includedir /etc/mysql/conf.d/
+!includedir /etc/mysql/mariadb.conf.d/
+
+[mysqld]
+skip-networking=0
+skip-bind-address
+' >/etc/mysql/my.cnf
+
+echo '
+#
+# These groups are read by MariaDB server.
+# Use it for options that only the server (but not clients) should see
+#
+# See the examples of server my.cnf files in /usr/share/mysql
+
+# this is read by the standalone daemon and embedded servers
+[server]
+
+# this is only for the mysqld standalone daemon
+[mysqld]
+
+#
+# * Basic Settings
+#
+user                    = mysql
+pid-file                = /run/mysqld/mysqld.pid
+socket                  = /run/mysqld/mysqld.sock
+#port                   = 3306
+basedir                 = /usr
+datadir                 = /var/lib/mysql
+tmpdir                  = /tmp
+lc-messages-dir         = /usr/share/mysql
+#skip-external-locking
+
+# Instead of skip-networking the default is now to listen only on
+# localhost which is more compatible and is not less secure.
+bind-address            = 0.0.0.0
+
+#
+# * Fine Tuning
+#
+#key_buffer_size        = 16M
+#max_allowed_packet     = 16M
+#thread_stack           = 192K
+#thread_cache_size      = 8
+# This replaces the startup script and checks MyISAM tables if needed
+# the first time they are touched
+#myisam_recover_options = BACKUP
+#max_connections        = 100
+#table_cache            = 64
+#thread_concurrency     = 10
+
+#
+# * Query Cache Configuration
+#
+#query_cache_limit      = 1M
+query_cache_size        = 16M
+
+#
+# * Logging and Replication
+#
+# Both location gets rotated by the cronjob.
+# Be aware that this log type is a performance killer.
+# As of 5.1 you can enable the log at runtime!
+#general_log_file       = /var/log/mysql/mysql.log
+#general_log            = 1
+#
+# Error log - should be very few entries.
+#
+log_error = /var/log/mysql/error.log
+#
+# Enable the slow query log to see queries with especially long duration
+#slow_query_log_file    = /var/log/mysql/mariadb-slow.log
+#long_query_time        = 10
+#log_slow_rate_limit    = 1000
+#log_slow_verbosity     = query_plan
+#log-queries-not-using-indexes
+#
+# The following can be used as easy to replay backup logs or for replication.
+# note: if you are setting up a replication slave, see README.Debian about
+#       other settings you may need to change.
+#server-id              = 1
+#log_bin                = /var/log/mysql/mysql-bin.log
+expire_logs_days        = 10
+#max_binlog_size        = 100M
+#binlog_do_db           = include_database_name
+#binlog_ignore_db       = exclude_database_name
+
+#
+# * Security Features
+#
+# Read the manual, too, if you want chroot!
+#chroot = /var/lib/mysql/
+#
+# For generating SSL certificates you can use for example the GUI tool "tinyca".
+#
+#ssl-ca = /etc/mysql/cacert.pem
+#ssl-cert = /etc/mysql/server-cert.pem
+#ssl-key = /etc/mysql/server-key.pem
+#
+# Accept only connections using the latest and most secure TLS protocol version.
+# ..when MariaDB is compiled with OpenSSL:
+#ssl-cipher = TLSv1.2
+# ..when MariaDB is compiled with YaSSL (default in Debian):
+#ssl = on
+
+#
+# * Character sets
+#
+# MySQL/MariaDB default is Latin1, but in Debian we rather default to the full
+# utf8 4-byte character set. See also client.cnf
+#
+character-set-server  = utf8mb4
+collation-server      = utf8mb4_general_ci
+
+#
+# * InnoDB
+#
+# InnoDB is enabled by default with a 10MB datafile in /var/lib/mysql/.
+# Read the manual for more InnoDB related options. There are many!
+
+#
+# * Unix socket authentication plugin is built-in since 10.0.22-6
+#
+# Needed so the root database user can authenticate without a password but
+# only when running as the unix root user.
+#
+# Also available for other users if required.
+# See https://mariadb.com/kb/en/unix_socket-authentication-plugin/
+
+# this is only for embedded server
+[embedded]
+
+# This group is only read by MariaDB servers, not by MySQL.
+# If you use the same .cnf file for MySQL and MariaDB,
+# you can put MariaDB-only options here
+[mariadb]
+
+# This group is only read by MariaDB-10.3 servers.
+# If you use the same .cnf file for MariaDB of different versions,
+# use this group for options that older servers don'\''t understand
+[mariadb-10.3]
+' >/etc/mysql/mariadb.conf.d/50-server.cnf
+
+mysql -u root -p
+
+
+# CREATE USER 'PrakJarkom3D06'@'%' IDENTIFIED BY 'KelD06';
+# CREATE USER 'PrakJarkom3D06'@'localhost' IDENTIFIED BY 'KelD06';
+# CREATE DATABASE dbPrakJarkom3D06;
+# GRANT ALL PRIVILEGES ON *.* TO 'PrakJarkom3D06'@'%';
+# GRANT ALL PRIVILEGES ON *.* TO 'PrakJarkom3D06'@'localhost';
+# FLUSH PRIVILEGES;
+
+mysql -u PrakJarkom3D06 -p KelD06
+service mysql start
+```
+
+Buat DATABASE Berikut
+
+```sql
+CREATE USER 'PrakJarkom3D06'@'%' IDENTIFIED BY 'KelD06';
+CREATE USER 'PrakJarkom3D06'@'localhost' IDENTIFIED BY 'KelD06';
+CREATE DATABASE dbPrakJarkom3D06;
+GRANT ALL PRIVILEGES ON *.* TO 'PrakJarkom3D06'@'%';
+GRANT ALL PRIVILEGES ON *.* TO 'PrakJarkom3D06'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+Testing di Laravel Worker
+
+```sh
+apt-get update
+apt-get install mariadb-client -y
+mariadb --host=192.194.2.1 --port=3306 --user=PrakJarkom3D06 --password=KelD06
+```
 
 **Result di Database** :
 
@@ -794,3 +1099,5 @@ lynx granz.channel.D06.com/its
 **Result di Worker** :
 
 ![Alt text](images/image-6.png)
+
+## No 14
